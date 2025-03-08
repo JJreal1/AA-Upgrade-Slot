@@ -31,10 +31,7 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            opacity: 0;
-        }
-        .active {
-            animation: fadeInOut 1s ease-out forwards;
+            opacity: 1;
         }
         .failure {
             color: red;
@@ -64,15 +61,14 @@
             font-size: 16px;
             border-radius: 5px;
         }
-        @keyframes fadeInOut {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
-        }
     </style>
 </head>
 <body>
     <h1>Rarity Slot Machine</h1>
+    <div>
+        <label for="adminPassword">Admin Password:</label>
+        <input type="text" id="adminPassword" placeholder="Enter Admin Password">
+    </div>
     <div>
         <label for="chapterInput">Enter Chapter (Admin Only):</label>
         <input type="text" id="chapterInput" placeholder="Enter Chapter Name">
@@ -110,19 +106,25 @@
             { name: "Extraordinary Relic", chance: 2 }
         ];
 
+        const adminPassword = "admin123"; // Replace with your desired admin password
         let isSpinning = false;
 
+        // Function to validate admin login
+        function validateAdminLogin() {
+            const password = document.getElementById("adminPassword").value;
+            return password === adminPassword;
+        }
+
+        // Function to get the spin result based on the selected rarity
         function getRandomItem(rarity) {
             const selectedRarity = options.find(option => option.name === rarity);
-            let totalWeight = options.reduce((sum, opt) => sum + opt.chance, 0);
-            let rand = Math.random() * totalWeight;
-            let cumulative = 0;
+            if (!selectedRarity) return { name: "Failure", chance: 0 };
 
-            for (let option of options) {
-                cumulative += option.chance;
-                if (rand < cumulative && option.name === selectedRarity.name) return option;
+            let rand = Math.random() * 100;
+            if (rand <= selectedRarity.chance) {
+                return selectedRarity; // Success
             }
-            return { name: "Failure", chance: 0 }; // Ensure failure result if doesn't match
+            return { name: "Failure", chance: 0 }; // Failure
         }
 
         function spinMachine() {
@@ -130,6 +132,11 @@
             const rarity = document.getElementById("raritySelect").value;
 
             if (isSpinning) return;
+
+            if (!validateAdminLogin()) {
+                alert("Invalid admin password.");
+                return;
+            }
 
             if (!chapter) {
                 alert("Please enter a Chapter name.");
@@ -139,21 +146,21 @@
             isSpinning = true;
             document.getElementById("spinBtn").disabled = true;
             document.getElementById("spinSound").play();
+
             const slotText = document.getElementById("slotText");
             slotText.classList.remove("failure");
-            slotText.textContent = "Failure";
+            slotText.textContent = "Spinning...";
 
+            // Simulate the slot machine spin
             let spinInterval = setInterval(() => {
                 slotText.textContent = getRandomItem(rarity).name;
-                slotText.classList.add("active");
-                slotText.classList.add("failure");
             }, 100);
 
             setTimeout(() => {
                 clearInterval(spinInterval);
                 const result = getRandomItem(rarity);
                 slotText.textContent = `${result.name}`;
-                slotText.classList.remove("failure");
+                slotText.classList.add(result.name === "Failure" ? "failure" : "");
                 document.getElementById("winSound").play();
                 isSpinning = false;
                 document.getElementById("spinBtn").disabled = false;
