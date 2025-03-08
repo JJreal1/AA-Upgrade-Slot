@@ -165,6 +165,7 @@
                 isSpinning = false;
                 document.getElementById("spinBtn").disabled = false;
 
+                // Post the result to Discord webhook
                 postResult(chapter, rarity, result.name);
             }, 5000); // Spins for 5 seconds
         }
