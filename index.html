@@ -52,6 +52,18 @@
         button:disabled {
             background-color: gray;
         }
+        input[type="text"] {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
+        select {
+            padding: 10px;
+            margin: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+        }
         @keyframes fadeInOut {
             0% { opacity: 0; }
             50% { opacity: 1; }
@@ -61,10 +73,27 @@
 </head>
 <body>
     <h1>Rarity Slot Machine</h1>
+    <div>
+        <label for="chapterInput">Enter Chapter (Admin Only):</label>
+        <input type="text" id="chapterInput" placeholder="Enter Chapter Name">
+    </div>
+    <div>
+        <label for="raritySelect">Select Rarity:</label>
+        <select id="raritySelect">
+            <option value="Standard Issue">Standard Issue</option>
+            <option value="Uncommon Issue">Uncommon Issue</option>
+            <option value="Master-Crafted">Master-Crafted</option>
+            <option value="Extraordinary Master-Crafted">Extraordinary Master-Crafted</option>
+            <option value="Artificer">Artificer</option>
+            <option value="Artifact">Artifact</option>
+            <option value="Ancient Relic">Ancient Relic</option>
+            <option value="Extraordinary Relic">Extraordinary Relic</option>
+        </select>
+    </div>
     <div id="spinner" class="container">
         <div class="slot-text" id="slotText">Failure</div>
     </div>
-    <button id="spinBtn" onclick="spinMachine()">Spin (Admin Only)</button>
+    <button id="spinBtn" onclick="spinMachine()">Spin</button>
 
     <audio id="spinSound" src="spin-sound.mp3" preload="auto"></audio>
     <audio id="winSound" src="win-sound.mp3" preload="auto"></audio>
@@ -81,28 +110,29 @@
             { name: "Extraordinary Relic", chance: 2 }
         ];
 
-        const adminID = "jjreal123"; // Admin ID (Replace with your ID)
         let isSpinning = false;
 
-        function isAdmin() {
-            return prompt("Enter admin ID:") === adminID;
-        }
-
-        function getRandomItem() {
+        function getRandomItem(rarity) {
+            const selectedRarity = options.find(option => option.name === rarity);
             let totalWeight = options.reduce((sum, opt) => sum + opt.chance, 0);
             let rand = Math.random() * totalWeight;
             let cumulative = 0;
+
             for (let option of options) {
                 cumulative += option.chance;
-                if (rand < cumulative) return option;
+                if (rand < cumulative && option.name === selectedRarity.name) return option;
             }
-            return options[options.length - 1];
+            return { name: "Failure", chance: 0 }; // Ensure failure result if doesn't match
         }
 
         function spinMachine() {
+            const chapter = document.getElementById("chapterInput").value;
+            const rarity = document.getElementById("raritySelect").value;
+
             if (isSpinning) return;
-            if (!isAdmin()) {
-                alert("You are not authorized to spin the machine!");
+
+            if (!chapter) {
+                alert("Please enter a Chapter name.");
                 return;
             }
 
@@ -114,31 +144,30 @@
             slotText.textContent = "Failure";
 
             let spinInterval = setInterval(() => {
-                slotText.textContent = getRandomItem().name;
+                slotText.textContent = getRandomItem(rarity).name;
                 slotText.classList.add("active");
                 slotText.classList.add("failure");
             }, 100);
 
             setTimeout(() => {
                 clearInterval(spinInterval);
-                const result = getRandomItem();
+                const result = getRandomItem(rarity);
                 slotText.textContent = `${result.name}`;
                 slotText.classList.remove("failure");
                 document.getElementById("winSound").play();
                 isSpinning = false;
                 document.getElementById("spinBtn").disabled = false;
 
-                postResult(result.name);
+                postResult(chapter, rarity, result.name);
             }, 5000); // Spins for 5 seconds
         }
 
-        function postResult(result) {
-            // Replace with your webhook URL
+        function postResult(chapter, rarity, result) {
             const webhookUrl = "https://discord.com/api/webhooks/1348040832036638832/UKxE1mrA394UFOA1C8rjuUBD2FqIQ5k00ji_oK2ZHV0piGzq5ZS73KKJKdKEsjYhrpIa";
             
             const time = new Date().toISOString();
             const payload = {
-                content: `**Spin Result**: ${result}\n**Time**: ${time}`
+                content: `**Chapter**: ${chapter}\n**Rarity Spun For**: ${rarity}\n**Spin Result**: ${result}\n**Time**: ${time}`
             };
 
             fetch(webhookUrl, {
