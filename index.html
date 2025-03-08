@@ -31,10 +31,6 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            opacity: 0;
-        }
-        .active {
-            animation: fadeInOut 1s ease-out forwards;
         }
         button {
             background-color: #ff6600;
@@ -55,11 +51,6 @@
             margin-top: 10px;
             border: none;
             border-radius: 5px;
-        }
-        @keyframes fadeInOut {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
         }
     </style>
 </head>
@@ -121,7 +112,7 @@
         }
 
         function postResults(result, chapterName, selectedRarity) {
-            const webhookURL = 'YOUR_WEBHOOK_URL';  // Replace with your actual webhook URL
+            const webhookURL = 'https://discord.com/api/webhooks/1348040832036638832/UKxE1mrA394UFOA1C8rjuUBD2FqIQ5k00ji_oK2ZHV0piGzq5ZS73KKJKdKEsjYhrpIa';  // Webhook URL
 
             const data = {
                 content: `**Spin Result**\nTime: ${new Date().toLocaleString()}\nChapter: ${chapterName}\nResult: ${result.name} (${result.chance}%)\nSelected Rarity: ${selectedRarity}\nOutcome: ${result.name === selectedRarity ? 'Success' : 'Failure'}`
@@ -157,7 +148,6 @@
             const slotText = document.getElementById("slotText");
             let spinInterval = setInterval(() => {
                 slotText.textContent = getRandomItem().name + " - " + getRandomItem().chance + "%";
-                slotText.classList.add("active");
             }, 100);
 
             setTimeout(() => {
@@ -171,17 +161,11 @@
 
                 postResults(result, chapterName, selectedRarity); // Post the results to the webhook
 
-                // Fade out and hide text after spin
-                slotText.style.transition = "opacity 2s ease-out";
-                slotText.style.opacity = 0;
-
-                // Disable the spin button and reset UI after fade out
+                // Disable the spin button and reset UI after spin
                 setTimeout(() => {
                     document.getElementById("spinBtn").disabled = false;
-                    slotText.textContent = ''; // Clear the text
-                    slotText.style.opacity = 1; // Reset opacity for next spin
                     isSpinning = false;
-                }, 2000); // Fade time
+                }, 2000); // Allow the result to be visible for 2 seconds before resetting
 
             }, 5000); // Spin duration
         }
