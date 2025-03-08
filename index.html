@@ -153,7 +153,8 @@
 
             // Simulate the slot machine spin
             let spinInterval = setInterval(() => {
-                slotText.textContent = getRandomItem(rarity).name;
+                const randomIndex = Math.floor(Math.random() * options.length);
+                slotText.textContent = options[randomIndex].name;
             }, 100);
 
             setTimeout(() => {
