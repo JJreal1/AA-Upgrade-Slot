@@ -1,1 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rarity Spinner</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        canvas { margin-top: 20px; border: 2px solid black; }
+        button { margin-top: 10px; padding: 10px 20px; font-size: 18px; }
+        #result { font-size: 20px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
 
+    <h1>Rarity Spinner</h1>
+    <canvas id="wheelCanvas" width="400" height="400"></canvas>
+    <br>
+    <button onclick="spinWheel()">SPIN</button>
+    <p id="result"></p>
+
+    <script>
+        // Spinner options and probabilities
+        const options = [
+            { name: "Standard Issue", chance: 0, reward: "Default (Prices above)" },
+            { name: "Uncommon Issue", chance: 5, reward: "50% | 5 Adamantium" },
+            { name: "Master-Crafted", chance: 10, reward: "Craft OR 50% | 15 Adamantium" },
+            { name: "Extraordinary Master-Crafted", chance: 15, reward: "35% | 2 Plasteel" },
+            { name: "Artificer", chance: 25, reward: "Craft (Prices above)" },
+            { name: "Artifact", chance: 30, reward: "Remnant 20% | STC + 10 Ceramite" },
+            { name: "Ancient Relic", chance: 35, reward: "Relic 10% | STC + 50 Adamantium" },
+            { name: "Extraordinary Relic", chance: 35, reward: "Special Name 2% | STC + 10 Plasteel" }
+        ];
+
+        const canvas = document.getElementById("wheelCanvas");
+        const ctx = canvas.getContext("2d");
+        let spinning = false;
+
+        // Weighted random selection
+        function getRandomItem() {
+            let totalWeight = options.reduce((sum, opt) => sum + opt.chance, 0);
+            let rand = Math.random() * totalWeight;
+            let cumulative = 0;
+            for (let option of options) {
+                cumulative += option.chance;
+                if (rand < cumulative) return option;
+            }
+            return options[options.length - 1]; // Default case
+        }
+
+        function drawWheel() {
+            const sliceSize = (2 * Math.PI) / options.length;
+            options.forEach((option, i) => {
+                ctx.beginPath();
+                ctx.moveTo(200, 200);
+                ctx.arc(200, 200, 200, i * sliceSize, (i + 1) * sliceSize);
+                ctx.fillStyle = i % 2 === 0 ? "#ffcc00" : "#ff6600";
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = "#000";
+                ctx.fillText(option.name, 180 + 120 * Math.cos(i * sliceSize + sliceSize / 2), 
+                                      200 + 120 * Math.sin(i * sliceSize + sliceSize / 2));
+            });
+        }
+
+        function spinWheel() {
+            if (spinning) return;
+            spinning = true;
+            document.getElementById("result").innerText = "Spinning...";
+
+            setTimeout(() => {
+                let result = getRandomItem();
+                document.getElementById("result").innerText = `Result: ${result.name} (${result.reward})`;
+                spinning = false;
+            }, 3000);
+        }
+
+        drawWheel();
+    </script>
+
+</body>
+</html>
