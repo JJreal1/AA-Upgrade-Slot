@@ -31,6 +31,10 @@
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
+            opacity: 0;
+        }
+        .active {
+            animation: fadeInOut 1s ease-out forwards;
         }
         button {
             background-color: #ff6600;
@@ -58,12 +62,10 @@
             font-size: 24px;
             font-weight: bold;
         }
-        .spin-text {
-            animation: spin-animation 5s ease-out infinite;
-        }
-        @keyframes spin-animation {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
         }
     </style>
 </head>
@@ -77,29 +79,28 @@
         <h2>Live Results</h2>
         <div id="result"></div>
     </div>
+    <audio id="spinSound" src="spin-sound.mp3" preload="auto"></audio>
+    <audio id="winSound" src="win-sound.mp3" preload="auto"></audio>
 
     <script>
         const options = [
-            { name: "Standard Issue", chance: 0, reward: "Default (Prices above)" },
-            { name: "Uncommon Issue", chance: 5, reward: "50% | 5 Adamantium" },
-            { name: "Master-Crafted", chance: 10, reward: "Craft OR 50% | 15 Adamantium" },
-            { name: "Extraordinary Master-Crafted", chance: 15, reward: "35% | 2 Plasteel" },
-            { name: "Artificer", chance: 25, reward: "Craft (Prices above)" },
-            { name: "Artifact", chance: 30, reward: "Remnant 20% | STC + 10 Ceramite" },
-            { name: "Ancient Relic", chance: 35, reward: "Relic 10% | STC + 50 Adamantium" },
-            { name: "Extraordinary Relic", chance: 35, reward: "Special Name 2% | STC + 10 Plasteel" }
+            { name: "Standard Issue", chance: 0 },
+            { name: "Uncommon Issue", chance: 5 },
+            { name: "Master-Crafted", chance: 10 },
+            { name: "Extraordinary Master-Crafted", chance: 15 },
+            { name: "Artificer", chance: 25 },
+            { name: "Artifact", chance: 30 },
+            { name: "Ancient Relic", chance: 35 },
+            { name: "Extraordinary Relic", chance: 35 }
         ];
 
-        const adminID = "yourGitHubUserID";  // Replace with your GitHub user ID or check via session storage for real authentication
+        const adminID = "yourGitHubUserID";
         let isSpinning = false;
 
-        // Simulating admin-only spin
         function isAdmin() {
-            // Simple admin check (this could be replaced with a better auth system)
             return prompt("Enter admin ID:") === adminID;
         }
 
-        // Randomly select an option
         function getRandomItem() {
             let totalWeight = options.reduce((sum, opt) => sum + opt.chance, 0);
             let rand = Math.random() * totalWeight;
@@ -108,10 +109,9 @@
                 cumulative += option.chance;
                 if (rand < cumulative) return option;
             }
-            return options[options.length - 1]; // Default case
+            return options[options.length - 1];
         }
 
-        // Spin machine function
         function spinMachine() {
             if (isSpinning) return;
             if (!isAdmin()) {
@@ -121,31 +121,23 @@
 
             isSpinning = true;
             document.getElementById("spinBtn").disabled = true;
+            document.getElementById("spinSound").play();
             const slotText = document.getElementById("slotText");
             let spinInterval = setInterval(() => {
-                slotText.textContent = getRandomItem().name;
+                slotText.textContent = getRandomItem().name + " - " + getRandomItem().chance + "%";
+                slotText.classList.add("active");
             }, 100);
 
-            // Simulate the spinning
             setTimeout(() => {
                 clearInterval(spinInterval);
                 const result = getRandomItem();
-                slotText.textContent = `${result.name} - ${result.reward}`;
-                document.getElementById("result").innerText = `Result: ${result.name} (${result.reward})`;
+                slotText.textContent = `${result.name} - ${result.chance}%`;
+                document.getElementById("result").innerText = `Result: ${result.name} (${result.chance}%)`;
+                document.getElementById("winSound").play();
                 isSpinning = false;
                 document.getElementById("spinBtn").disabled = false;
-            }, 5000); // 5 seconds spin
+            }, 5000);
         }
-
-        // Style improvements
-        function setColorThemes() {
-            document.body.style.backgroundColor = "#2c2c2c";
-            document.getElementById("spinner").style.backgroundColor = "#555";
-            document.getElementById("spinBtn").style.backgroundColor = "#ff6600";
-        }
-
-        setColorThemes();
     </script>
 </body>
 </html>
-
