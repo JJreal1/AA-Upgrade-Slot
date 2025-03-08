@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rarity Slot Machine</title>
+    <title>Rarity Slot Machine with Chat</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -62,6 +62,32 @@
             font-size: 24px;
             font-weight: bold;
         }
+        #chat {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 10px;
+            width: 80%;
+            height: 200px;
+            overflow-y: scroll;
+            color: white;
+        }
+        #messageInput {
+            width: 70%;
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+        }
+        #sendBtn {
+            background-color: #ff6600;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            font-size: 16px;
+            border-radius: 5px;
+        }
         @keyframes fadeInOut {
             0% { opacity: 0; }
             50% { opacity: 1; }
@@ -70,7 +96,7 @@
     </style>
 </head>
 <body>
-    <h1>Rarity Slot Machine</h1>
+    <h1>Rarity Slot Machine with Chat</h1>
     <div id="spinner" class="container">
         <div class="slot-text" id="slotText">Failure</div>
     </div>
@@ -79,6 +105,14 @@
         <h2>Live Results</h2>
         <div id="result"></div>
     </div>
+
+    <!-- Chat Section -->
+    <div id="chat">
+        <div id="messages"></div>
+    </div>
+    <input type="text" id="messageInput" placeholder="Enter message" />
+    <button id="sendBtn" onclick="sendMessage()">Send</button>
+
     <audio id="spinSound" src="spin-sound.mp3" preload="auto"></audio>
     <audio id="winSound" src="win-sound.mp3" preload="auto"></audio>
 
@@ -94,8 +128,18 @@
             { name: "Extraordinary Relic", chance: 35 }
         ];
 
-        const adminID = "yourGitHubUserID";
+        const adminID = "jjreal123";  // Admin ID set here
         let isSpinning = false;
+        let username = generateUsername();
+
+        // Function to generate random usernames
+        function generateUsername() {
+            const adjectives = ["Mighty", "Stealthy", "Brave", "Swift", "Ancient", "Relentless"];
+            const nouns = ["Dragon", "Knight", "Warrior", "Mage", "Assassin", "Archer"];
+            const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+            return randomAdj + " " + randomNoun;
+        }
 
         function isAdmin() {
             return prompt("Enter admin ID:") === adminID;
@@ -138,6 +182,19 @@
                 document.getElementById("spinBtn").disabled = false;
             }, 5000);
         }
+
+        // Send chat message function
+        function sendMessage() {
+            const message = document.getElementById("messageInput").value;
+            if (message.trim() !== "") {
+                const chatMessage = document.createElement("div");
+                chatMessage.textContent = `${username}: ${message}`;
+                document.getElementById("messages").appendChild(chatMessage);
+                document.getElementById("messageInput").value = "";  // Clear input
+                document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight; // Scroll to bottom
+            }
+        }
     </script>
 </body>
 </html>
+
