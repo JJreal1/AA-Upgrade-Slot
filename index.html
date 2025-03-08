@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rarity Slot Machine with Chat</title>
+    <title>Rarity Slot Machine</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
@@ -49,43 +49,11 @@
         button:disabled {
             background-color: gray;
         }
-        #live-board {
-            margin-top: 50px;
-            padding: 10px;
-            background-color: #444;
-            border-radius: 10px;
-            display: inline-block;
-            width: 80%;
-            color: white;
-        }
-        #result {
-            font-size: 24px;
-            font-weight: bold;
-        }
-        #chat {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #444;
-            border-radius: 10px;
-            width: 80%;
-            height: 200px;
-            overflow-y: scroll;
-            color: white;
-        }
-        #messageInput {
-            width: 70%;
+        select, input {
             padding: 10px;
             font-size: 16px;
+            margin-top: 10px;
             border: none;
-            border-radius: 5px;
-        }
-        #sendBtn {
-            background-color: #ff6600;
-            padding: 10px 20px;
-            cursor: pointer;
-            border: none;
-            color: white;
-            font-size: 16px;
             border-radius: 5px;
         }
         @keyframes fadeInOut {
@@ -96,22 +64,28 @@
     </style>
 </head>
 <body>
-    <h1>Rarity Slot Machine with Chat</h1>
+    <h1>Rarity Slot Machine</h1>
     <div id="spinner" class="container">
         <div class="slot-text" id="slotText">Failure</div>
     </div>
+    <div class="container">
+        <label for="raritySelect">Select Rarity to Spin for:</label>
+        <select id="raritySelect">
+            <option value="Standard Issue">Standard Issue</option>
+            <option value="Uncommon Issue">Uncommon Issue</option>
+            <option value="Master-Crafted">Master-Crafted</option>
+            <option value="Extraordinary Master-Crafted">Extraordinary Master-Crafted</option>
+            <option value="Artificer">Artificer</option>
+            <option value="Artifact">Artifact</option>
+            <option value="Ancient Relic">Ancient Relic</option>
+            <option value="Extraordinary Relic">Extraordinary Relic</option>
+        </select>
+    </div>
+    <div class="container">
+        <label for="playerName">Enter Player Name (Admin Only):</label>
+        <input type="text" id="playerName" placeholder="Player Name">
+    </div>
     <button id="spinBtn" onclick="spinMachine()">Spin (Admin Only)</button>
-    <div id="live-board">
-        <h2>Live Results</h2>
-        <div id="result"></div>
-    </div>
-
-    <!-- Chat Section -->
-    <div id="chat">
-        <div id="messages"></div>
-    </div>
-    <input type="text" id="messageInput" placeholder="Enter message" />
-    <button id="sendBtn" onclick="sendMessage()">Send</button>
 
     <audio id="spinSound" src="spin-sound.mp3" preload="auto"></audio>
     <audio id="winSound" src="win-sound.mp3" preload="auto"></audio>
@@ -128,18 +102,8 @@
             { name: "Extraordinary Relic", chance: 35 }
         ];
 
-        const adminID = "jjreal123";  // Admin ID set here
+        const adminID = "jjreal123";  // Replace with your admin ID
         let isSpinning = false;
-        let username = generateUsername();
-
-        // Function to generate random usernames
-        function generateUsername() {
-            const adjectives = ["Mighty", "Stealthy", "Brave", "Swift", "Ancient", "Relentless"];
-            const nouns = ["Dragon", "Knight", "Warrior", "Mage", "Assassin", "Archer"];
-            const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
-            const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
-            return randomAdj + " " + randomNoun;
-        }
 
         function isAdmin() {
             return prompt("Enter admin ID:") === adminID;
@@ -156,6 +120,23 @@
             return options[options.length - 1];
         }
 
+        function postResults(result, playerName) {
+            const webhookURL = 'https://discord.com/api/webhooks/1348040832036638832/UKxE1mrA394UFOA1C8rjuUBD2FqIQ5k00ji_oK2ZHV0piGzq5ZS73KKJKdKEsjYhrpIa';  // Replace with your actual webhook URL
+
+            const data = {
+                content: `**Spin Result**\nTime: ${new Date().toLocaleString()}\nPlayer: ${playerName}\nResult: ${result.name} (${result.chance}%)`
+            };
+
+            fetch(webhookURL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(data => console.log('Successfully posted results:', data))
+            .catch(error => console.error('Error posting results:', error));
+        }
+
         function spinMachine() {
             if (isSpinning) return;
             if (!isAdmin()) {
@@ -163,6 +144,13 @@
                 return;
             }
 
+            const playerName = document.getElementById("playerName").value.trim();
+            if (playerName === '') {
+                alert("Please enter a player name.");
+                return;
+            }
+
+            const selectedRarity = document.getElementById("raritySelect").value;
             isSpinning = true;
             document.getElementById("spinBtn").disabled = true;
             document.getElementById("spinSound").play();
@@ -176,25 +164,16 @@
                 clearInterval(spinInterval);
                 const result = getRandomItem();
                 slotText.textContent = `${result.name} - ${result.chance}%`;
-                document.getElementById("result").innerText = `Result: ${result.name} (${result.chance}%)`;
-                document.getElementById("winSound").play();
+
+                if (result.name === selectedRarity) {
+                    document.getElementById("winSound").play();
+                }
+
+                postResults(result, playerName); // Post the results to the webhook
                 isSpinning = false;
                 document.getElementById("spinBtn").disabled = false;
             }, 5000);
         }
-
-        // Send chat message function
-        function sendMessage() {
-            const message = document.getElementById("messageInput").value;
-            if (message.trim() !== "") {
-                const chatMessage = document.createElement("div");
-                chatMessage.textContent = `${username}: ${message}`;
-                document.getElementById("messages").appendChild(chatMessage);
-                document.getElementById("messageInput").value = "";  // Clear input
-                document.getElementById("chat").scrollTop = document.getElementById("chat").scrollHeight; // Scroll to bottom
-            }
-        }
     </script>
 </body>
 </html>
-
