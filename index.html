@@ -3,24 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rarity Spinner</title>
+    <title>Rarity Slot Machine</title>
     <style>
-        body { text-align: center; font-family: Arial, sans-serif; }
-        canvas { margin-top: 20px; border: 2px solid black; }
-        button { margin-top: 10px; padding: 10px 20px; font-size: 18px; }
-        #result { font-size: 20px; font-weight: bold; margin-top: 20px; }
+        body { 
+            font-family: Arial, sans-serif; 
+            background-color: #2d2d2d; 
+            color: white;
+            text-align: center;
+        }
+        .container { 
+            margin-top: 20px;
+        }
+        #spinner {
+            width: 80%;
+            margin: 0 auto;
+            height: 50px;
+            background-color: #333;
+            display: flex;
+            justify-content: space-evenly;
+            align-items: center;
+            font-size: 18px;
+            color: white;
+            font-weight: bold;
+            position: relative;
+        }
+        .slot-text {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        button {
+            background-color: #ff6600;
+            padding: 15px 30px;
+            font-size: 18px;
+            margin-top: 20px;
+            cursor: pointer;
+            border: none;
+            color: white;
+            border-radius: 5px;
+        }
+        button:disabled {
+            background-color: gray;
+        }
+        #live-board {
+            margin-top: 50px;
+            padding: 10px;
+            background-color: #444;
+            border-radius: 10px;
+            display: inline-block;
+            width: 80%;
+            color: white;
+        }
+        #result {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .spin-text {
+            animation: spin-animation 5s ease-out infinite;
+        }
+        @keyframes spin-animation {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
     </style>
 </head>
 <body>
-
-    <h1>Rarity Spinner</h1>
-    <canvas id="wheelCanvas" width="400" height="400"></canvas>
-    <br>
-    <button onclick="spinWheel()">SPIN</button>
-    <p id="result"></p>
+    <h1>Rarity Slot Machine</h1>
+    <div id="spinner" class="container">
+        <div class="slot-text" id="slotText">Failure</div>
+    </div>
+    <button id="spinBtn" onclick="spinMachine()">Spin (Admin Only)</button>
+    <div id="live-board">
+        <h2>Live Results</h2>
+        <div id="result"></div>
+    </div>
 
     <script>
-        // Spinner options and probabilities
         const options = [
             { name: "Standard Issue", chance: 0, reward: "Default (Prices above)" },
             { name: "Uncommon Issue", chance: 5, reward: "50% | 5 Adamantium" },
@@ -32,11 +90,16 @@
             { name: "Extraordinary Relic", chance: 35, reward: "Special Name 2% | STC + 10 Plasteel" }
         ];
 
-        const canvas = document.getElementById("wheelCanvas");
-        const ctx = canvas.getContext("2d");
-        let spinning = false;
+        const adminID = "yourGitHubUserID";  // Replace with your GitHub user ID or check via session storage for real authentication
+        let isSpinning = false;
 
-        // Weighted random selection
+        // Simulating admin-only spin
+        function isAdmin() {
+            // Simple admin check (this could be replaced with a better auth system)
+            return prompt("Enter admin ID:") === adminID;
+        }
+
+        // Randomly select an option
         function getRandomItem() {
             let totalWeight = options.reduce((sum, opt) => sum + opt.chance, 0);
             let rand = Math.random() * totalWeight;
@@ -48,35 +111,41 @@
             return options[options.length - 1]; // Default case
         }
 
-        function drawWheel() {
-            const sliceSize = (2 * Math.PI) / options.length;
-            options.forEach((option, i) => {
-                ctx.beginPath();
-                ctx.moveTo(200, 200);
-                ctx.arc(200, 200, 200, i * sliceSize, (i + 1) * sliceSize);
-                ctx.fillStyle = i % 2 === 0 ? "#ffcc00" : "#ff6600";
-                ctx.fill();
-                ctx.stroke();
-                ctx.fillStyle = "#000";
-                ctx.fillText(option.name, 180 + 120 * Math.cos(i * sliceSize + sliceSize / 2), 
-                                      200 + 120 * Math.sin(i * sliceSize + sliceSize / 2));
-            });
-        }
+        // Spin machine function
+        function spinMachine() {
+            if (isSpinning) return;
+            if (!isAdmin()) {
+                alert("You are not authorized to spin the machine!");
+                return;
+            }
 
-        function spinWheel() {
-            if (spinning) return;
-            spinning = true;
-            document.getElementById("result").innerText = "Spinning...";
+            isSpinning = true;
+            document.getElementById("spinBtn").disabled = true;
+            const slotText = document.getElementById("slotText");
+            let spinInterval = setInterval(() => {
+                slotText.textContent = getRandomItem().name;
+            }, 100);
 
+            // Simulate the spinning
             setTimeout(() => {
-                let result = getRandomItem();
+                clearInterval(spinInterval);
+                const result = getRandomItem();
+                slotText.textContent = `${result.name} - ${result.reward}`;
                 document.getElementById("result").innerText = `Result: ${result.name} (${result.reward})`;
-                spinning = false;
-            }, 3000);
+                isSpinning = false;
+                document.getElementById("spinBtn").disabled = false;
+            }, 5000); // 5 seconds spin
         }
 
-        drawWheel();
-    </script>
+        // Style improvements
+        function setColorThemes() {
+            document.body.style.backgroundColor = "#2c2c2c";
+            document.getElementById("spinner").style.backgroundColor = "#555";
+            document.getElementById("spinBtn").style.backgroundColor = "#ff6600";
+        }
 
+        setColorThemes();
+    </script>
 </body>
 </html>
+
